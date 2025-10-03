@@ -1,0 +1,790 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Payment Chatbot Implementation Guide</title>
+    <style>
+        @page {
+            size: A4;
+            margin: 2cm;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            line-height: 1.5;
+            color: #333;
+            max-width: 21cm;
+            margin: 0 auto;
+            padding: 1.5cm;
+            background: white;
+            font-size: 11pt;
+        }
+        
+        .header {
+            border-bottom: 3px solid #667eea;
+            padding-bottom: 15px;
+            margin-bottom: 25px;
+        }
+        
+        h1 {
+            color: #667eea;
+            font-size: 24pt;
+            margin: 0 0 8px 0;
+            font-weight: 700;
+        }
+        
+        .subtitle {
+            color: #666;
+            font-size: 11pt;
+            font-style: italic;
+        }
+        
+        h2 {
+            color: #667eea;
+            font-size: 16pt;
+            margin: 25px 0 12px 0;
+            padding-bottom: 6px;
+            border-bottom: 2px solid #e0e0e0;
+            page-break-after: avoid;
+        }
+        
+        h3 {
+            color: #555;
+            font-size: 13pt;
+            margin: 18px 0 10px 0;
+            font-weight: 600;
+            page-break-after: avoid;
+        }
+        
+        h4 {
+            color: #667eea;
+            font-size: 11pt;
+            margin: 12px 0 8px 0;
+            font-weight: 600;
+        }
+        
+        p {
+            margin: 8px 0;
+            text-align: justify;
+        }
+        
+        ul, ol {
+            margin: 8px 0;
+            padding-left: 22px;
+        }
+        
+        li {
+            margin: 5px 0;
+        }
+        
+        .code-block {
+            background: #f5f5f5;
+            border-left: 3px solid #667eea;
+            padding: 15px;
+            font-family: 'Consolas', 'Monaco', 'Courier New', monospace;
+            font-size: 9.5pt;
+            margin: 12px 0;
+            overflow-x: auto;
+            page-break-inside: avoid;
+            line-height: 1.6;
+        }
+        
+        .code-block pre {
+            margin: 0;
+            white-space: pre;
+        }
+        
+        .diagram-box {
+            background: #f8f9ff;
+            border: 1px solid #667eea;
+            padding: 15px;
+            margin: 12px 0;
+            font-family: 'Courier New', monospace;
+            font-size: 9pt;
+            text-align: center;
+            page-break-inside: avoid;
+        }
+        
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 12px 0;
+            font-size: 10pt;
+            page-break-inside: avoid;
+        }
+        
+        th {
+            background: #667eea;
+            color: white;
+            padding: 8px;
+            text-align: left;
+            font-weight: 600;
+            font-size: 10pt;
+        }
+        
+        td {
+            padding: 8px;
+            border-bottom: 1px solid #e0e0e0;
+            vertical-align: top;
+        }
+        
+        .highlight-box {
+            background: #f8f9ff;
+            border-left: 4px solid #667eea;
+            padding: 12px 15px;
+            margin: 12px 0;
+            page-break-inside: avoid;
+        }
+        
+        .info-box {
+            background: #e3f2fd;
+            border-left: 4px solid #2196f3;
+            padding: 12px 15px;
+            margin: 12px 0;
+            page-break-inside: avoid;
+        }
+        
+        .formula {
+            background: #fff;
+            border: 1px solid #ddd;
+            padding: 10px;
+            margin: 10px 0;
+            text-align: center;
+            font-family: 'Times New Roman', serif;
+            font-size: 11pt;
+            page-break-inside: avoid;
+        }
+        
+        .component-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+            margin: 12px 0;
+        }
+        
+        .component-card {
+            border: 1px solid #e0e0e0;
+            padding: 10px;
+            background: white;
+            page-break-inside: avoid;
+        }
+        
+        .component-card strong {
+            color: #667eea;
+            display: block;
+            margin-bottom: 5px;
+        }
+        
+        .footer {
+            margin-top: 30px;
+            padding-top: 15px;
+            border-top: 2px solid #e0e0e0;
+            font-size: 9pt;
+            color: #666;
+            text-align: center;
+        }
+        
+        .keyword { color: #0000ff; font-weight: bold; }
+        .function { color: #795e26; font-weight: bold; }
+        .type { color: #267f99; }
+        .number { color: #098658; }
+        .string { color: #a31515; }
+        .comment { color: #008000; font-style: italic; }
+        
+        @media print {
+            body {
+                padding: 0;
+            }
+            .page-break {
+                page-break-before: always;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>Payment Chatbot Implementation Guide</h1>
+        <p class="subtitle">Multi-Stakeholder RAG System - Technical Architecture & Design Decisions</p>
+    </div>
+
+    <h2>1. Architecture Overview and Component Interaction</h2>
+
+    <h3>1.1 System Architecture</h3>
+    <p>The Payment Chatbot implements a Retrieval-Augmented Generation (RAG) architecture combining vector-based semantic search with large language model inference. The system employs a modular design with clear separation of concerns across five primary layers: presentation, API, business logic, data processing, and storage.</p>
+
+    <div style="background: white; padding: 20px; border: 2px solid #667eea; margin: 15px 0;">
+        <div style="background: #667eea; color: white; padding: 12px; text-align: center; font-weight: bold; border-radius: 4px; margin-bottom: 15px;">
+            Web Interface Layer<br>
+            <small style="font-size: 9pt; font-weight: normal;">(HTML/CSS/JavaScript + Role Selector UI)</small>
+        </div>
+        
+        <div style="text-align: center; margin: 10px 0;">
+            <div style="display: inline-block; padding: 3px 8px; background: #e0e0e0; border-radius: 3px; font-size: 9pt;">HTTP/REST</div>
+            <div style="font-size: 18pt; color: #667eea;">↓</div>
+        </div>
+
+        <div style="background: #f8f9ff; border: 2px solid #667eea; padding: 15px; margin: 10px 0; border-radius: 4px;">
+            <div style="font-weight: bold; color: #667eea; margin-bottom: 10px; text-align: center;">FastAPI Application</div>
+            <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px;">
+                <div style="background: white; border: 1px solid #ddd; padding: 8px; text-align: center; font-size: 9pt;">Chat<br>Endpoints</div>
+                <div style="background: white; border: 1px solid #ddd; padding: 8px; text-align: center; font-size: 9pt;">Document<br>Upload</div>
+                <div style="background: white; border: 1px solid #ddd; padding: 8px; text-align: center; font-size: 9pt;">Health<br>Check</div>
+            </div>
+        </div>
+
+        <div style="text-align: center; margin: 10px 0;">
+            <div style="font-size: 18pt; color: #667eea;">↓</div>
+        </div>
+
+        <div style="background: #f8f9ff; border: 2px solid #667eea; padding: 15px; margin: 10px 0; border-radius: 4px;">
+            <div style="font-weight: bold; color: #667eea; margin-bottom: 10px; text-align: center;">Chatbot Business Logic</div>
+            <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px;">
+                <div style="background: white; border: 1px solid #ddd; padding: 8px; text-align: center; font-size: 9pt;">Query<br>Router</div>
+                <div style="background: white; border: 1px solid #ddd; padding: 8px; text-align: center; font-size: 9pt;">Stakeholder<br>Handler</div>
+                <div style="background: white; border: 1px solid #ddd; padding: 8px; text-align: center; font-size: 9pt;">Response<br>Generator</div>
+            </div>
+        </div>
+
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-top: 15px;">
+            <div>
+                <div style="text-align: center; margin: 5px 0;">
+                    <div style="font-size: 18pt; color: #667eea;">↓</div>
+                </div>
+                <div style="background: #e8f5e9; border: 2px solid #66bb6a; padding: 12px; text-align: center; border-radius: 4px;">
+                    <strong>Document Processing</strong><br>
+                    <small style="font-size: 9pt;">PDF → Text → Classify → NER → Chunk</small>
+                </div>
+                <div style="text-align: center; margin: 5px 0;">
+                    <div style="font-size: 18pt; color: #66bb6a;">↓</div>
+                </div>
+                <div style="background: #fff8e1; border: 2px solid #ffa726; padding: 12px; text-align: center; border-radius: 4px;">
+                    <strong>Ollama LLM</strong><br>
+                    <small style="font-size: 9pt;">llama3.2:3b (Local)</small>
+                </div>
+            </div>
+            
+            <div>
+                <div style="text-align: center; margin: 5px 0;">
+                    <div style="font-size: 18pt; color: #667eea;">↓</div>
+                </div>
+                <div style="background: #e3f2fd; border: 2px solid #2196f3; padding: 12px; text-align: center; border-radius: 4px;">
+                    <strong>Vector Search</strong><br>
+                    <small style="font-size: 9pt;">Pinecone (281 vectors)</small>
+                </div>
+                <div style="text-align: center; margin: 5px 0;">
+                    <div style="font-size: 18pt; color: #2196f3;">↓</div>
+                </div>
+                <div style="background: #f3e5f5; border: 2px solid #9c27b0; padding: 12px; text-align: center; border-radius: 4px;">
+                    <strong>Embeddings</strong><br>
+                    <small style="font-size: 9pt;">Sentence-Transformers (384-dim)</small>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <h3>1.2 Component Interaction Flow</h3>
+
+    <h4>Query Processing Pipeline:</h4>
+    
+    <div style="background: white; padding: 15px; border: 2px solid #667eea; margin: 10px 0;">
+        <div style="display: flex; align-items: center; margin: 8px 0;">
+            <div style="background: #667eea; color: white; padding: 10px 15px; border-radius: 4px; min-width: 40px; text-align: center; font-weight: bold;">1</div>
+            <div style="flex: 1; margin: 0 10px; padding: 10px; background: #f8f9ff; border-left: 3px solid #667eea;">
+                <strong>Request Reception</strong><br>
+                <small>FastAPI endpoint receives user query with optional role parameter</small>
+            </div>
+        </div>
+        
+        <div style="text-align: center; color: #667eea; font-size: 16pt;">↓</div>
+        
+        <div style="display: flex; align-items: center; margin: 8px 0;">
+            <div style="background: #667eea; color: white; padding: 10px 15px; border-radius: 4px; min-width: 40px; text-align: center; font-weight: bold;">2</div>
+            <div style="flex: 1; margin: 0 10px; padding: 10px; background: #f8f9ff; border-left: 3px solid #667eea;">
+                <strong>Role Determination</strong><br>
+                <small>Query Router analyzes intent → maps to stakeholder (Product/Tech/Compliance/Bank)</small>
+            </div>
+        </div>
+        
+        <div style="text-align: center; color: #667eea; font-size: 16pt;">↓</div>
+        
+        <div style="display: flex; align-items: center; margin: 8px 0;">
+            <div style="background: #2196f3; color: white; padding: 10px 15px; border-radius: 4px; min-width: 40px; text-align: center; font-weight: bold;">3</div>
+            <div style="flex: 1; margin: 0 10px; padding: 10px; background: #e3f2fd; border-left: 3px solid #2196f3;">
+                <strong>Context Retrieval</strong><br>
+                <small>Generate embedding → Query Pinecone → Retrieve top-K similar chunks</small>
+            </div>
+        </div>
+        
+        <div style="text-align: center; color: #667eea; font-size: 16pt;">↓</div>
+        
+        <div style="display: flex; align-items: center; margin: 8px 0;">
+            <div style="background: #667eea; color: white; padding: 10px 15px; border-radius: 4px; min-width: 40px; text-align: center; font-weight: bold;">4</div>
+            <div style="flex: 1; margin: 0 10px; padding: 10px; background: #f8f9ff; border-left: 3px solid #667eea;">
+                <strong>Prompt Construction</strong><br>
+                <small>Stakeholder Handler applies role-specific system prompt + formats context</small>
+            </div>
+        </div>
+        
+        <div style="text-align: center; color: #667eea; font-size: 16pt;">↓</div>
+        
+        <div style="display: flex; align-items: center; margin: 8px 0;">
+            <div style="background: #ffa726; color: white; padding: 10px 15px; border-radius: 4px; min-width: 40px; text-align: center; font-weight: bold;">5</div>
+            <div style="flex: 1; margin: 0 10px; padding: 10px; background: #fff8e1; border-left: 3px solid #ffa726;">
+                <strong>Response Generation</strong><br>
+                <small>Ollama LLM processes prompt → generates stakeholder-appropriate answer</small>
+            </div>
+        </div>
+        
+        <div style="text-align: center; color: #667eea; font-size: 16pt;">↓</div>
+        
+        <div style="display: flex; align-items: center; margin: 8px 0;">
+            <div style="background: #66bb6a; color: white; padding: 10px 15px; border-radius: 4px; min-width: 40px; text-align: center; font-weight: bold;">6</div>
+            <div style="flex: 1; margin: 0 10px; padding: 10px; background: #e8f5e9; border-left: 3px solid #66bb6a;">
+                <strong>Post-processing</strong><br>
+                <small>Add source citations + confidence scores + metadata → Return response</small>
+            </div>
+        </div>
+    </div>
+
+    <div class="code-block"><pre><span class="keyword">def</span> <span class="function">chat</span>(query: <span class="type">str</span>, user_role: <span class="type">str</span>, top_k: <span class="type">int</span> = <span class="number">3</span>) -> <span class="type">dict</span>:
+    <span class="comment"># Step 1: Route to stakeholder</span>
+    stakeholder = query_router.route_query(query, user_role)
+    
+    <span class="comment"># Step 2: Retrieve relevant documents</span>
+    context_docs = knowledge_base.query(
+        question=query,
+        stakeholder=stakeholder,
+        top_k=top_k
+    )
+    
+    <span class="comment"># Step 3: Get role-specific prompt</span>
+    system_prompt = stakeholder_handler.get_system_prompt(stakeholder)
+    
+    <span class="comment"># Step 4: Generate response</span>
+    response = response_generator.generate_response(
+        query=query,
+        context_docs=context_docs,
+        system_prompt=system_prompt
+    )
+    
+    <span class="keyword">return</span> response</pre></div>
+
+    <h4>Document Indexing Pipeline:</h4>
+    
+    <div style="background: white; padding: 15px; border: 2px solid #66bb6a; margin: 10px 0;">
+        <div style="display: flex; align-items: center; margin: 8px 0;">
+            <div style="background: #66bb6a; color: white; padding: 10px 15px; border-radius: 4px; min-width: 40px; text-align: center; font-weight: bold;">1</div>
+            <div style="flex: 1; margin: 0 10px; padding: 10px; background: #e8f5e9; border-left: 3px solid #66bb6a;">
+                <strong>Upload</strong><br>
+                <small>PDF received via multipart form data (FastAPI endpoint)</small>
+            </div>
+        </div>
+        
+        <div style="text-align: center; color: #66bb6a; font-size: 16pt;">↓</div>
+        
+        <div style="display: flex; align-items: center; margin: 8px 0;">
+            <div style="background: #66bb6a; color: white; padding: 10px 15px; border-radius: 4px; min-width: 40px; text-align: center; font-weight: bold;">2</div>
+            <div style="flex: 1; margin: 0 10px; padding: 10px; background: #e8f5e9; border-left: 3px solid #66bb6a;">
+                <strong>Text Extraction</strong><br>
+                <small>pdfplumber extracts text | OCR fallback (pytesseract) for scanned docs</small>
+            </div>
+        </div>
+        
+        <div style="text-align: center; color: #66bb6a; font-size: 16pt;">↓</div>
+        
+        <div style="display: flex; align-items: center; margin: 8px 0;">
+            <div style="background: #9c27b0; color: white; padding: 10px 15px; border-radius: 4px; min-width: 40px; text-align: center; font-weight: bold;">3</div>
+            <div style="flex: 1; margin: 0 10px; padding: 10px; background: #f3e5f5; border-left: 3px solid #9c27b0;">
+                <strong>Classification</strong><br>
+                <small>Pre-trained DistilBERT → 4 types (Technical/Compliance/Business/Product)</small>
+            </div>
+        </div>
+        
+        <div style="text-align: center; color: #66bb6a; font-size: 16pt;">↓</div>
+        
+        <div style="display: flex; align-items: center; margin: 8px 0;">
+            <div style="background: #9c27b0; color: white; padding: 10px 15px; border-radius: 4px; min-width: 40px; text-align: center; font-weight: bold;">4</div>
+            <div style="flex: 1; margin: 0 10px; padding: 10px; background: #f3e5f5; border-left: 3px solid #9c27b0;">
+                <strong>Entity Extraction</strong><br>
+                <small>BERT NER → Extract ORG, DATE, MONEY, API endpoints, transaction IDs</small>
+            </div>
+        </div>
+        
+        <div style="text-align: center; color: #66bb6a; font-size: 16pt;">↓</div>
+        
+        <div style="display: flex; align-items: center; margin: 8px 0;">
+            <div style="background: #66bb6a; color: white; padding: 10px 15px; border-radius: 4px; min-width: 40px; text-align: center; font-weight: bold;">5</div>
+            <div style="flex: 1; margin: 0 10px; padding: 10px; background: #e8f5e9; border-left: 3px solid #66bb6a;">
+                <strong>Chunking</strong><br>
+                <small>Split into 500-char chunks with 50-char overlap (sentence-boundary aware)</small>
+            </div>
+        </div>
+        
+        <div style="text-align: center; color: #66bb6a; font-size: 16pt;">↓</div>
+        
+        <div style="display: flex; align-items: center; margin: 8px 0;">
+            <div style="background: #2196f3; color: white; padding: 10px 15px; border-radius: 4px; min-width: 40px; text-align: center; font-weight: bold;">6</div>
+            <div style="flex: 1; margin: 0 10px; padding: 10px; background: #e3f2fd; border-left: 3px solid #2196f3;">
+                <strong>Embedding</strong><br>
+                <small>Sentence-transformers generates 384-dimensional vectors for each chunk</small>
+            </div>
+        </div>
+        
+        <div style="text-align: center; color: #66bb6a; font-size: 16pt;">↓</div>
+        
+        <div style="display: flex; align-items: center; margin: 8px 0;">
+            <div style="background: #2196f3; color: white; padding: 10px 15px; border-radius: 4px; min-width: 40px; text-align: center; font-weight: bold;">7</div>
+            <div style="flex: 1; margin: 0 10px; padding: 10px; background: #e3f2fd; border-left: 3px solid #2196f3;">
+                <strong>Storage</strong><br>
+                <small>Pinecone upsert with UUID, metadata (source, type, entities, stakeholders)</small>
+            </div>
+        </div>
+    </div>
+
+    <h3>1.3 Technology Stack Rationale</h3>
+
+    <table>
+        <tr>
+            <th>Component</th>
+            <th>Technology</th>
+            <th>Justification</th>
+        </tr>
+        <tr>
+            <td>API Framework</td>
+            <td>FastAPI</td>
+            <td>High performance async support, automatic OpenAPI docs, type validation</td>
+        </tr>
+        <tr>
+            <td>Vector DB</td>
+            <td>Pinecone</td>
+            <td>Managed service, sub-100ms query latency, serverless scaling</td>
+        </tr>
+        <tr>
+            <td>LLM</td>
+            <td>Ollama (LLaMA 3.2)</td>
+            <td>Local inference (no API costs), 3B params efficient on CPU</td>
+        </tr>
+        <tr>
+            <td>Embeddings</td>
+            <td>all-MiniLM-L6-v2</td>
+            <td>384-dim balance between quality and speed, good for semantic search</td>
+        </tr>
+    </table>
+
+    <div class="page-break"></div>
+
+    <h2>2. Model Selection Rationale and Training Approach</h2>
+
+    <h3>2.1 Model Selection Criteria</h3>
+
+    <div class="highlight-box">
+        <strong>Primary Selection Factors:</strong>
+        <ul>
+            <li>Task-specific performance (classification, NER, embeddings, generation)</li>
+            <li>Computational efficiency (CPU-compatible, inference speed)</li>
+            <li>Model size vs accuracy trade-off</li>
+            <li>Integration simplicity with Python ecosystem</li>
+        </ul>
+    </div>
+
+    <h3>2.2 Document Classification Model</h3>
+
+    <h4>Current Implementation: Pre-trained DistilBERT</h4>
+    <p><strong>Model:</strong> distilbert-base-uncased<br>
+    <strong>Task:</strong> 4-class document type classification<br>
+    <strong>Classes:</strong> Technical Specification, Compliance Regulation, Business Partnership, Product Guideline</p>
+
+    <p><strong>Rationale:</strong> DistilBERT provides 97% of BERT's performance with 40% fewer parameters and 60% faster inference. The model is used in pre-trained form without domain-specific fine-tuning.</p>
+
+    <h3>2.3 Named Entity Recognition</h3>
+
+    <p><strong>Model:</strong> dslim/bert-base-NER<br>
+    <strong>Entities Extracted:</strong> PERSON, ORG (NPCI, RBI), LOC, DATE, MONEY (₹1,00,000)<br>
+    <strong>Use Case:</strong> Metadata enrichment for filtered search and context enhancement</p>
+
+    <p>Pre-trained model sufficient for general entity types. Domain-specific entities (transaction IDs, API endpoints) extracted via regex patterns.</p>
+
+    <h3>2.4 Embedding Model</h3>
+
+    <p><strong>Model:</strong> sentence-transformers/all-MiniLM-L6-v2<br>
+    <strong>Dimensions:</strong> 384<br>
+    <strong>Performance:</strong> Mean pooling with normalization</p>
+
+    <div class="formula">
+        <strong>Similarity Calculation:</strong><br>
+        cosine_similarity(q, d) = (q · d) / (||q|| × ||d||)
+    </div>
+
+    <p><strong>Rationale:</strong> Balances quality and speed. Larger models (768-dim BERT) offer marginal gains but 2x slower inference. 384-dim sufficient for retrieval precision in domain-constrained corpus.</p>
+
+    <h3>2.5 Language Model</h3>
+
+    <p><strong>Model:</strong> Ollama llama3.2:3b<br>
+    <strong>Context Window:</strong> 8K tokens<br>
+    <strong>Inference:</strong> Local, CPU-based</p>
+
+    <p><strong>Selection Criteria:</strong></p>
+    <ul>
+        <li>3B parameter size enables CPU inference (8-16GB RAM)</li>
+        <li>No API costs (vs GPT-4: $0.03/1K tokens)</li>
+        <li>Sufficient reasoning for RAG tasks with retrieved context</li>
+        <li>Privacy: sensitive financial data stays local</li>
+    </ul>
+
+    <div class="page-break"></div>
+
+    <h2>3. Vector Database Schema and Search Strategy</h2>
+
+    <h3>3.1 Pinecone Index Configuration</h3>
+
+    <table>
+        <tr>
+            <th>Parameter</th>
+            <th>Value</th>
+            <th>Reasoning</th>
+        </tr>
+        <tr>
+            <td>Dimension</td>
+            <td>384</td>
+            <td>Matches sentence-transformers output</td>
+        </tr>
+        <tr>
+            <td>Metric</td>
+            <td>Cosine</td>
+            <td>Standard for normalized embeddings, range [-1, 1]</td>
+        </tr>
+        <tr>
+            <td>Cloud</td>
+            <td>AWS</td>
+            <td>us-east-1 region for low latency</td>
+        </tr>
+        <tr>
+            <td>Pod Type</td>
+            <td>Serverless</td>
+            <td>Auto-scaling, pay-per-query</td>
+        </tr>
+    </table>
+
+    <h3>3.2 Metadata Schema</h3>
+
+    <p>Each vector stored with rich metadata for filtered search and attribution:</p>
+
+    <div class="code-block"><pre>{
+    <span class="string">"id"</span>: <span class="string">"uuid-generated-unique-id"</span>,
+    <span class="string">"values"</span>: [<span class="number">0.123</span>, <span class="number">-0.456</span>, ...],  <span class="comment"># 384-dim embedding</span>
+    <span class="string">"metadata"</span>: {
+        <span class="string">"text"</span>: <span class="string">"truncated_chunk_text"</span>,  <span class="comment"># First 1000 chars</span>
+        <span class="string">"source"</span>: <span class="string">"KYC_Guidelines.pdf"</span>,
+        <span class="string">"doc_type"</span>: <span class="string">"compliance_regulation"</span>,
+        <span class="string">"stakeholders"</span>: <span class="string">"compliance_lead,product_lead"</span>,
+        <span class="string">"has_amounts"</span>: <span class="keyword">true</span>,
+        <span class="string">"has_dates"</span>: <span class="keyword">true</span>,
+        <span class="string">"chunk_index"</span>: <span class="number">5</span>,
+        <span class="string">"total_chunks"</span>: <span class="number">45</span>
+    }
+}</pre></div>
+
+    <h3>3.3 Search Strategy</h3>
+
+    <h4>Multi-Stage Retrieval Process:</h4>
+
+    <ol>
+        <li><strong>Query Embedding:</strong> Convert user query to 384-dim vector using same sentence-transformers model</li>
+        <li><strong>Similarity Search:</strong> Pinecone returns top-K vectors by cosine similarity</li>
+        <li><strong>Metadata Filtering (Optional):</strong> Filter by stakeholder relevance, document type</li>
+        <li><strong>Re-ranking:</strong> Score results by relevance + recency + entity match</li>
+        <li><strong>Context Window:</strong> Select top-3 chunks (limit: ~1500 chars to fit LLM context)</li>
+    </ol>
+
+    <div class="code-block"><pre><span class="comment"># Vector search implementation</span>
+<span class="keyword">def</span> <span class="function">search</span>(query: <span class="type">str</span>, top_k: <span class="type">int</span> = <span class="number">5</span>) -> <span class="type">list</span>:
+    <span class="comment"># Generate query embedding</span>
+    query_vector = embedding_service.embed_query(query)
+    
+    <span class="comment"># Query Pinecone</span>
+    results = index.query(
+        vector=query_vector,
+        top_k=top_k,
+        include_metadata=<span class="keyword">True</span>
+    )
+    
+    <span class="comment"># Format and return results</span>
+    formatted_results = [
+        {
+            <span class="string">'score'</span>: match[<span class="string">'score'</span>],
+            <span class="string">'text'</span>: match.metadata[<span class="string">'text'</span>],
+            <span class="string">'source'</span>: match.metadata[<span class="string">'source'</span>]
+        }
+        <span class="keyword">for</span> match <span class="keyword">in</span> results[<span class="string">'matches'</span>]
+    ]
+    
+    <span class="keyword">return</span> formatted_results</pre></div>
+
+    <h3>3.4 Chunking Strategy</h3>
+
+    <p><strong>Configuration:</strong></p>
+    <ul>
+        <li>Chunk size: 500 characters</li>
+        <li>Overlap: 50 characters (10%)</li>
+        <li>Method: Sliding window with sentence boundary awareness</li>
+    </ul>
+
+    <p><strong>Rationale:</strong></p>
+    <ul>
+        <li>500 chars balances context vs precision (tested 200/500/1000/2000)</li>
+        <li>Overlap preserves context across boundaries (prevents information loss)</li>
+        <li>Sentence-aware splitting avoids mid-sentence cuts</li>
+    </ul>
+
+    <div class="formula">
+        <strong>Chunks per Document:</strong><br>
+        num_chunks = ⌈(doc_length - overlap) / (chunk_size - overlap)⌉
+    </div>
+
+    <h3>3.5 Index Management</h3>
+
+    <p><strong>UUID-based Vector IDs:</strong> Each chunk receives a unique UUID (universally unique identifier) to prevent overwrites during re-indexing. This replaced an initial sequential ID system that caused duplicate ID collisions.</p>
+
+    <p><strong>Current Scale:</strong> 281 vectors indexed from payment domain documents</p>
+
+    <p><strong>Performance:</strong> Pinecone query latency under 100ms for top-10 retrieval at current scale</p>
+
+    <div class="page-break"></div>
+
+    <h2>4. Stakeholder-Specific Query Handling Logic</h2>
+
+    <h3>4.1 Stakeholder Role Definitions</h3>
+
+    <table>
+        <tr>
+            <th>Role</th>
+            <th>Focus Area</th>
+            <th>Query Types</th>
+            <th>Response Style</th>
+        </tr>
+        <tr>
+            <td>Product Lead</td>
+            <td>Business metrics, UX</td>
+            <td>Transaction limits, features, adoption</td>
+            <td>High-level, strategic</td>
+        </tr>
+        <tr>
+            <td>Tech Lead</td>
+            <td>Implementation</td>
+            <td>APIs, architecture, integration</td>
+            <td>Code-level, specific technologies</td>
+        </tr>
+        <tr>
+            <td>Compliance</td>
+            <td>Regulations</td>
+            <td>KYC, AML, audit requirements</td>
+            <td>Formal, citation-heavy</td>
+        </tr>
+        <tr>
+            <td>Bank Alliance</td>
+            <td>Partnerships</td>
+            <td>SLAs, uptime, integration health</td>
+            <td>Relationship-focused</td>
+        </tr>
+    </table>
+
+    <h3>4.2 Query Routing Mechanism</h3>
+
+    <p>Two-stage classification approach:</p>
+
+    <ol>
+        <li><strong>Explicit Role Selection:</strong> User manually selects role via UI dropdown (overrides automatic detection)</li>
+        <li><strong>Automatic Intent Classification:</strong> When role unspecified, keyword-based classification maps query to stakeholder</li>
+    </ol>
+
+    <div class="code-block"><pre><span class="keyword">STAKEHOLDER_KEYWORDS</span> = {
+    <span class="string">'product_lead'</span>: [
+        <span class="string">'transaction limit'</span>, <span class="string">'user experience'</span>, <span class="string">'feature'</span>, 
+        <span class="string">'adoption'</span>, <span class="string">'success rate'</span>, <span class="string">'metrics'</span>
+    ],
+    <span class="string">'tech_lead'</span>: [
+        <span class="string">'API'</span>, <span class="string">'integration'</span>, <span class="string">'architecture'</span>, <span class="string">'endpoint'</span>, 
+        <span class="string">'database'</span>, <span class="string">'error code'</span>, <span class="string">'implementation'</span>
+    ],
+    <span class="string">'compliance_lead'</span>: [
+        <span class="string">'KYC'</span>, <span class="string">'AML'</span>, <span class="string">'regulation'</span>, <span class="string">'RBI'</span>, 
+        <span class="string">'audit'</span>, <span class="string">'compliance'</span>, <span class="string">'FATF'</span>, <span class="string">'PCI-DSS'</span>
+    ],
+    <span class="string">'bank_alliance_lead'</span>: [
+        <span class="string">'SLA'</span>, <span class="string">'partnership'</span>, <span class="string">'uptime'</span>, 
+        <span class="string">'agreement'</span>, <span class="string">'integration health'</span>, <span class="string">'vendor'</span>
+    ]
+}
+
+<span class="keyword">def</span> <span class="function">route_query</span>(query: <span class="type">str</span>, explicit_role: <span class="type">str</span> = <span class="keyword">None</span>) -> <span class="type">str</span>:
+    <span class="keyword">if</span> explicit_role:
+        <span class="keyword">return</span> explicit_role
+    
+    query_lower = query.lower()
+    scores = {}
+    
+    <span class="keyword">for</span> role, keywords <span class="keyword">in</span> STAKEHOLDER_KEYWORDS.items():
+        scores[role] = sum(<span class="number">1</span> <span class="keyword">for</span> kw <span class="keyword">in</span> keywords <span class="keyword">if</span> kw <span class="keyword">in</span> query_lower)
+    
+    <span class="keyword">return</span> max(scores, key=scores.get) <span class="keyword">or</span> <span class="string">'product_lead'</span></pre></div>
+
+    <h3>4.3 Role-Specific System Prompts</h3>
+
+    <p>Each stakeholder has custom system prompt guiding LLM response style:</p>
+
+    <div class="highlight-box">
+        <strong>Product Lead Prompt:</strong> "You are a Product Manager advisor. Focus on business value, user impact, feature prioritization, and metrics. Use high-level language accessible to executives. Quantify impact when possible."
+    </div>
+
+    <div class="highlight-box">
+        <strong>Tech Lead Prompt:</strong> "You are a Technical Architect. Provide implementation details, mention specific technologies (Kafka, Redis, microservices), discuss API endpoints, database schemas, and code-level solutions. Use technical terminology."
+    </div>
+
+    <div class="highlight-box">
+        <strong>Compliance Prompt:</strong> "You are a Compliance Officer. Reference specific regulations (RBI guidelines, PCI-DSS), cite sections and circulars, discuss audit requirements and legal obligations. Use formal, precise language."
+    </div>
+
+    <div class="highlight-box">
+        <strong>Bank Alliance Prompt:</strong> "You are a Partnership Manager. Focus on SLA terms, uptime guarantees, integration timelines, relationship management, and vendor coordination. Emphasize reliability and collaboration."
+    </div>
+
+    <h3>4.4 Context Assembly</h3>
+
+    <p>For each query, system assembles context from retrieved chunks:</p>
+
+    <div class="code-block"><pre>context = <span class="string">f"""
+System Role: {system_prompt}
+
+Retrieved Context:
+{format_chunks(top_3_chunks)}
+
+User Query: {query}
+
+Instructions:
+- Answer based on retrieved context
+- Match response style to stakeholder role
+"""</span></pre></div>
+
+    <h3>4.5 Confidence Scoring</h3>
+
+    <p>Response confidence is derived from the average cosine similarity score of the top-3 retrieved chunks from Pinecone. The score ranges from 0-100%, with scores of 60-70% indicating relevant matches and 80%+ indicating high relevance.</p>
+
+    <p><strong>Current Performance:</strong> Average confidence 64-68% across stakeholder roles</p>
+
+    <h3>4.6 Response Post-Processing</h3>
+
+    <p>Final response includes:</p>
+    <ul>
+        <li>Stakeholder-appropriate answer (LLM-generated)</li>
+        <li>Source citations with relevance scores</li>
+        <li>Confidence percentage</li>
+        <li>Metadata: stakeholder role, context chunks used, processing time</li>
+    </ul>
+
+    <div class="footer">
+        <p><strong>Payment Document Chatbot - Implementation Guide</strong></p>
+        <p>Version 1.0</p>
+    </div>
+</body>
+</html>

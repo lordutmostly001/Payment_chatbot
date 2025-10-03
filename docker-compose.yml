@@ -1,0 +1,38 @@
+version: '3.8'
+
+services:
+  chatbot:
+    build: .
+    container_name: payment-chatbot
+    ports:
+      - "8000:8000"
+    environment:
+      - OPENAI_API_KEY=${OPENAI_API_KEY}
+      - PINECONE_API_KEY=${PINECONE_API_KEY}
+      - PINECONE_INDEX_NAME=payment-chatbot
+      - SECRET_KEY=${SECRET_KEY:-change-this-secret-key}
+    volumes:
+      - ./data:/app/data
+      - ./uploads:/app/uploads
+      - ./frontend:/app/frontend
+    restart: unless-stopped
+    networks:
+      - chatbot-network
+
+  ollama:
+    image: ollama/ollama:latest
+    container_name: ollama-service
+    ports:
+      - "11434:11434"
+    volumes:
+      - ollama-data:/root/.ollama
+    restart: unless-stopped
+    networks:
+      - chatbot-network
+
+networks:
+  chatbot-network:
+    driver: bridge
+
+volumes:
+  ollama-data:
