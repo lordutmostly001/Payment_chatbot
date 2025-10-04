@@ -1,0 +1,16 @@
+{
+  "openapi": "3.0.0",
+  "info": {
+    "title": "Payment API",
+    "version": "1.0.0",
+    "description": "UPI Payment Processing API"
+  },
+  "paths": {
+    "/payments/initiate": {
+      "post": {
+        "summary": "Initiate Payment",
+        "description": "Start a new UPI payment transaction"
+      }
+    }
+  }
+}

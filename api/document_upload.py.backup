@@ -1,6 +1,6 @@
 """
 Document Upload API Endpoints
-Handles PDF, JSON, and CSV document uploads and processing
+Handles PDF document uploads and processing
 """
 
 from fastapi import APIRouter, UploadFile, File, HTTPException
@@ -19,60 +19,24 @@ router = APIRouter(prefix="/documents", tags=["documents"])
 UPLOAD_DIR = Path("uploads")
 UPLOAD_DIR.mkdir(exist_ok=True)
 
-# Supported file extensions
-SUPPORTED_EXTENSIONS = {'.pdf', '.json', '.csv'}
-
 
 @router.post("/upload")
 async def upload_document(file: UploadFile = File(...)):
     """
-    Upload and process a document (PDF, JSON, or CSV)
+    Upload and process a PDF document
     
     Args:
-        file: Document file to upload (PDF, JSON, or CSV)
+        file: PDF file to upload
         
     Returns:
         Processing results
     """
     try:
-        # Get file extension
-        file_extension = Path(file.filename).suffix.lower()
-        
         # Validate file type
-        if file_extension not in SUPPORTED_EXTENSIONS:
+        if not file.filename.endswith('.pdf'):
             raise HTTPException(
-                status_code=415,
-                detail={
-                    "code": "unsupported_file_type",
-                    "message": "File format not supported",
-                    "details": {
-                        "filename": file.filename,
-                        "detected_extension": file_extension,
-                        "supported_types": list(SUPPORTED_EXTENSIONS),
-                        "suggestion": "Please upload PDF, JSON, or CSV files only"
-                    }
-                }
-            )
-        
-        # Check file size (10MB limit)
-        file.file.seek(0, 2)  # Seek to end
-        file_size = file.file.tell()
-        file.file.seek(0)  # Reset to beginning
-        
-        max_size = 10 * 1024 * 1024  # 10MB
-        if file_size > max_size:
-            raise HTTPException(
-                status_code=413,
-                detail={
-                    "code": "file_too_large",
-                    "message": "File exceeds maximum size limit",
-                    "details": {
-                        "filename": file.filename,
-                        "file_size_mb": round(file_size / (1024 * 1024), 2),
-                        "max_size_mb": 10.0,
-                        "suggestion": "Please reduce file size below 10MB"
-                    }
-                }
+                status_code=400,
+                detail="Only PDF files are supported"
             )
         
         # Save uploaded file
@@ -80,32 +44,21 @@ async def upload_document(file: UploadFile = File(...)):
         with open(file_path, 'wb') as buffer:
             shutil.copyfileobj(file.file, buffer)
         
-        logger.info(f"Uploaded {file_extension} file: {file.filename} ({file_size} bytes)")
+        logger.info(f"Uploaded file: {file.filename}")
         
         # Process the document
         result = knowledge_base.process_and_index_document(file_path)
         
         if result['success']:
-            response = {
+            return {
                 "success": True,
                 "message": f"Document processed successfully",
                 "filename": result['filename'],
-                "file_type": file_extension[1:],  # Remove the dot
                 "doc_type": result['doc_type'],
                 "confidence": result['confidence'],
                 "chunks_indexed": result['chunks_indexed'],
+                "entities": result['entities']
             }
-            
-            # Add format-specific information
-            if file_extension == '.pdf':
-                response["entities"] = result.get('entities', {})
-            elif file_extension == '.json':
-                response["json_type"] = result.get('json_type', 'unknown')
-            elif file_extension == '.csv':
-                response["row_count"] = result.get('row_count', 0)
-                response["column_count"] = result.get('column_count', 0)
-            
-            return response
         else:
             raise HTTPException(
                 status_code=500,
@@ -122,10 +75,10 @@ async def upload_document(file: UploadFile = File(...)):
 @router.post("/upload-batch")
 async def upload_documents(files: List[UploadFile] = File(...)):
     """
-    Upload and process multiple documents (PDF, JSON, CSV)
+    Upload and process multiple PDF documents
     
     Args:
-        files: List of document files
+        files: List of PDF files
         
     Returns:
         Batch processing results
@@ -134,38 +87,21 @@ async def upload_documents(files: List[UploadFile] = File(...)):
     
     for file in files:
         try:
-            # Get and validate file extension
-            file_extension = Path(file.filename).suffix.lower()
-            
-            if file_extension not in SUPPORTED_EXTENSIONS:
+            # Validate and save
+            if not file.filename.endswith('.pdf'):
                 results.append({
                     "filename": file.filename,
                     "success": False,
-                    "error": f"Unsupported file type: {file_extension}"
+                    "error": "Not a PDF file"
                 })
                 continue
             
-            # Check file size
-            file.file.seek(0, 2)
-            file_size = file.file.tell()
-            file.file.seek(0)
-            
-            if file_size > 10 * 1024 * 1024:
-                results.append({
-                    "filename": file.filename,
-                    "success": False,
-                    "error": "File too large (max 10MB)"
-                })
-                continue
-            
-            # Save file
             file_path = UPLOAD_DIR / file.filename
             with open(file_path, 'wb') as buffer:
                 shutil.copyfileobj(file.file, buffer)
             
             # Process
             result = knowledge_base.process_and_index_document(file_path)
-            result["file_type"] = file_extension[1:]
             results.append(result)
             
         except Exception as e:
@@ -205,6 +141,5 @@ async def health_check():
     return {
         "status": "healthy",
         "service": "documents",
-        "supported_formats": ["pdf", "json", "csv"],
         "message": "Document service is running"
     }

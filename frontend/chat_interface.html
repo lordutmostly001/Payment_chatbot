@@ -1076,8 +1076,8 @@
         <div class="upload-section">
             <h3 style="margin-bottom: 15px;">📄 Upload Documents</h3>
             <div class="upload-area" id="uploadArea">
-                <p>📎 Drop PDF files here or click to browse</p>
-                <input type="file" id="fileInput" accept=".pdf" multiple>
+                <p>📎 Drop Your files here or click to browse</p>
+                <input type="file" id="fileInput" accept=".pdf, .json, .csv" multiple>
             </div>
             <div class="upload-progress" id="uploadProgress"></div>
         </div>
@@ -1701,17 +1701,19 @@
         });
 
         async function handleFiles(files) {
-            const pdfFiles = Array.from(files).filter(f => f.name.endsWith('.pdf'));
-            
-            if (pdfFiles.length === 0) {
-                alert('Please select PDF files only');
-                return;
-            }
+            const validFiles = Array.from(files).filter(f => 
+                f.name.endsWith('.pdf') || f.name.endsWith('.json') || f.name.endsWith('.csv')
+        );
+
+        if (validFiles.length === 0) {
+            alert('Please select PDF, JSON, or CSV files only');
+            return;
+        }
 
             const progressDiv = document.getElementById('uploadProgress');
             progressDiv.innerHTML = '';
 
-            for (const file of pdfFiles) {
+            for (const file of validFiles) {
                 const fileDiv = document.createElement('div');
                 fileDiv.style.marginTop = '10px';
                 fileDiv.innerHTML = `
