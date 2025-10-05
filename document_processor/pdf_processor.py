@@ -6,7 +6,7 @@ Handles PDF, JSON, and CSV text extraction and preprocessing
 import logging
 from pathlib import Path
 from typing import List, Dict, Optional, Union
-import PyPDF2
+import pypdf as PyPDF2
 import json
 import pandas as pd
 from io import StringIO
